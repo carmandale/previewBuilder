@@ -1,47 +1,75 @@
-# USDZ Turntable Generator
+# Preview Builder
 
-This script creates a turntable animation from a USDZ file using Blender. It loads a base Blender scene and creates a 180-frame animation with the model rotating 360 degrees.
+This tool generates turntable preview animations from either source images or USDZ files. It supports both preview and final quality outputs, and generates WebM videos for easy viewing.
 
 ## Prerequisites
 
+- Python 3.6 or later
 - Blender 3.6 or later (with USD import support)
-- The base Blender file (`turntable_base_v01.blend`) in the same directory as the script
+- FFmpeg (for WebM conversion)
+- The base Blender file (`turntable_base_v01.blend`)
+- `groove-mesher` executable (for photogrammetry processing)
 
 ## Usage
 
+### Main Preview Builder Script
+
 ```bash
-blender --background --python createTurntable.py -- \
-    --usdz_path /path/to/your/file.usdz \
-    --output_path /path/to/output/directory \
-    --width 252 \
-    --height 384 \
-    --base_blend /path/to/turntable_base_v01.blend
+# Generate preview quality model and WebM
+python3 previewBuilder.py --source_path /path/to/source/images --output_path output -p
+
+# Generate final quality model and WebM
+python3 previewBuilder.py --source_path /path/to/source/images --output_path output -f
+
+# Generate WebM from existing USDZ file
+python3 previewBuilder.py --usdz_path /path/to/model.usdz --output_path output
 ```
 
 ### Arguments
 
-- `--usdz_path` (required): Path to the input USDZ file
-- `--output_path` (required): Directory where the rendered frames will be saved
-- `--width` (optional): Width of the output images (default: 252)
-- `--height` (optional): Height of the output images (default: 384)
-- `--base_blend` (optional): Path to the base Blender file (default: turntable_base_v01.blend in the script directory)
+- `--source_path`: Path to the source images directory (mutually exclusive with --usdz_path)
+- `--usdz_path`: Path to an existing USDZ file (mutually exclusive with --source_path)
+- `--output_path` (required): Base output directory
+- `-p, --preview`: Generate preview quality model (default)
+- `-f, --final`: Generate final quality model
+- `--width`: Width of the output images (default: 252)
+- `--height`: Height of the output images (default: 384)
+- `--base_blend`: Path to base Blender file (default: turntable_base_v01.blend)
+- `--blender_path`: Path to Blender executable
 
 ### Output Structure
 
-The script creates the following directory structure:
+The script creates numbered directories for each run:
 
 ```
-output_path/
-  ├── turntable_output_v01.blend    # The generated Blender file
-  └── renders/                      # Directory containing rendered frames
-      └── preview.####.jpg          # Rendered frame sequence (0000-0179)
+output/
+  └── p-001/                       # Incrementing directory for each run
+      ├── p-001.usdz              # Generated USDZ file
+      ├── p-001.webm              # Generated WebM preview
+      ├── turntable_output_v01.blend  # The Blender scene file
+      └── renders/                # Directory containing rendered frames
+          └── preview.####.jpg    # Rendered frame sequence
 ```
 
 ## Features
 
-- Automatically positions the model with its bottom at the world origin (0,0,0)
+- Automatic directory management with incremental naming
+- Support for both preview and final quality models
+- Progress bars for all processing stages
+- Total processing time tracking
+- WebM video generation with optimal settings
+- Handles both source images and existing USDZ files
+
+## Blender Script Details
+
+The included `createTurntable.py` script handles the Blender scene setup and rendering:
+
+- Automatically positions models at world origin (0,0,0)
 - Handles both single and multi-object USDZ files
 - Uses linear interpolation for smooth rotation
-- Preserves the camera and lighting setup from the base Blender file
+- Preserves camera and lighting setup
 - Supports non-square output resolutions
-- Saves the complete Blender scene for future reference or modifications
+
+## Processing Times
+
+See `results.md` for detailed timing information on different quality settings.
